@@ -7,7 +7,7 @@ A new Flutter application to demonstrate how to implement flutter google maps in
 1. Get an API key at https://cloud.google.com/maps-platform/.
 
 2. Enable Google Map SDK for each platform.
-   - Go to Google Developers Console.
+   - Go to [Google Developers Console.](https://console.cloud.google.com/)
    - Choose the project that you want to enable Google Maps on.
    - Select the navigation menu and then select "Google Maps".
    - Select "APIs" under the Google Maps menu.
