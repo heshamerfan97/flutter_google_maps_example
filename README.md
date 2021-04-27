@@ -47,6 +47,7 @@ import GoogleMaps
 
 
 ## Adding Custom Marker To the map
+<img src="/screenshots/custom_marker_screen.png" width="600">
 
 ### Adding normal marker
 
