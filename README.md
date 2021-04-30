@@ -23,7 +23,7 @@ A new Flutter application to demonstrate how to implement flutter google maps in
                android:value="YOUR KEY HERE"/>
 ```
 
-4. In `ios/Runner/AppDelegate.swift` addthe following lines 
+4. In `ios/Runner/AppDelegate.swift` add the following lines
 ```swift
 import UIKit
 import Flutter
@@ -113,4 +113,70 @@ Marker(
      position: markerLocation,
      icon: customIcon,
    )
+```
+
+
+## Map Customization (Light/Dark mode)
+<img src="/screenshots/map_dark_light.png" width="600">
+
+### Prepare the map styles
+1. Go to https://mapstyle.withgoogle.com/
+2. Choose the old version of the site by choosing **No thanks, take me to the old style wizard**
+3. You will find a lot of options, play with it until you get the desired style.
+4. Click Finish and a pop-up will show with the json code of your style, copy it and add it as a json file in your assets folder
+**Don't forgot to mention it in your pubspec.yaml**
+**You can find two styles in the project's assets folder**
+
+### Adding styles to the map
+1. Declare Strings that will hold your style's json and a bool to control which mode is shown on the map
+```dart
+bool mapDarkMode = true;
+late String _darkMapStyle;
+late String _lightMapStyle;
+```
+2. In initState declare the styles
+```dart
+Future _loadMapStyles() async {
+    _darkMapStyle = await rootBundle.loadString('assets/map_style/dark.json');
+    _lightMapStyle = await rootBundle.loadString('assets/map_style/light.json');
+  }
+```
+3. After creating the map, set the style
+```dart
+onMapCreated: (GoogleMapController controller) {
+          _controller.complete(controller);
+          _setMapPins([LatLng(30.029585, 31.022356)]);
+          _setMapStyle();
+        },
+```
+```dart
+Future _setMapStyle() async {
+    final controller = await _controller.future;
+    if (mapDarkMode)
+      controller.setMapStyle(_darkMapStyle);
+    else
+      controller.setMapStyle(_lightMapStyle);
+  }
+```
+4. To change the style we created a button on the map using the stack widget
+```dart
+Positioned(
+   top: 100,
+   right: 30,
+   child: Container(
+     height: 30,
+     width: 30,
+     child: IconButton(
+       icon: Icon(
+         mapDarkMode ? Icons.brightness_4 : Icons.brightness_5,
+         color: Theme.of(context).primaryColor,
+       ),
+       onPressed: () {
+         setState(() {
+           mapDarkMode = !mapDarkMode;
+           _setMapStyle();
+         });
+       },
+     ),
+   )),
 ```
