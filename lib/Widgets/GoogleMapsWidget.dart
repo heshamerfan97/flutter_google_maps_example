@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter_example/Repositories/MapRepository.dart';
+import 'package:google_maps_flutter_example/Utils/MapUtils.dart';
 
 class GoogleMapsWidget extends StatefulWidget {
   @override
@@ -11,13 +13,22 @@ class GoogleMapsWidget extends StatefulWidget {
 
 class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
   Completer<GoogleMapController> _controller = Completer();
+  double lat =30.029585;
+  double lng =31.022356;
+  final LatLng initialLatLng = LatLng(30.029585, 31.022356);
+  final LatLng destinationLatLng = LatLng(30.060567, 30.962413);
 
   Set<Marker> _markers = Set<Marker>();
   late BitmapDescriptor customIcon;
 
+
   bool mapDarkMode = true;
   late String _darkMapStyle;
   late String _lightMapStyle;
+
+
+  Set<Polyline> _polyline = {};
+  List<LatLng> polylineCoordinates = [];
 
   @override
   void initState() {
@@ -59,14 +70,16 @@ class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
         zoomControlsEnabled: false,
         mapToolbarEnabled: false,
         markers: _markers,
+        polylines: _polyline,
         initialCameraPosition: CameraPosition(
-          target: LatLng(30.029585, 31.022356),
+          target: initialLatLng,
           zoom: 14.47,
         ),
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
           _setMapPins([LatLng(30.029585, 31.022356)]);
           _setMapStyle();
+          _addPolyLines();
         },
       ),
       Positioned(
@@ -92,6 +105,15 @@ class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
     );
   }
 
+  _moveCamera(double? zoom) async {
+    final CameraPosition myPosition = CameraPosition(
+      target: LatLng(lat, lng),
+      zoom: zoom ?? 14.4746,
+    );
+    final GoogleMapController controller = await _controller.future;
+    controller.moveCamera(CameraUpdate.newCameraPosition(myPosition));
+  }
+
   _setMapPins(List<LatLng> markersLocation) {
     _markers.clear();
     setState(() {
@@ -102,6 +124,10 @@ class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
           icon: customIcon,
         ));
       });
+      _markers.add(Marker(
+        markerId: MarkerId(destinationLatLng.toString()),
+        position: destinationLatLng,
+      ));
     });
   }
 
@@ -111,5 +137,29 @@ class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
       controller.setMapStyle(_darkMapStyle);
     else
       controller.setMapStyle(_lightMapStyle);
+  }
+
+  _addPolyLines() {
+    setState(() {
+      lat = (initialLatLng.latitude + destinationLatLng.latitude)/2;
+      lng= (initialLatLng.longitude + destinationLatLng.longitude)/2;
+      _moveCamera(13.0);
+      _setPolyLine();
+    });
+  }
+
+  _setPolyLine() async {
+    final result = await MapRepository()
+        .getRouteCoordinates(initialLatLng, destinationLatLng);
+    final route = result.data["routes"][0]["overview_polyline"]["points"];
+    setState(() {
+      _polyline.add(Polyline(
+          polylineId: PolylineId("tripRoute"),
+          //pass any string here
+          width: 3,
+          geodesic: true,
+          points: MapUtils.convertToLatLng(MapUtils.decodePoly(route)),
+          color: Theme.of(context).primaryColor));
+    });
   }
 }

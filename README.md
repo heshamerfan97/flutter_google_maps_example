@@ -180,3 +180,62 @@ Positioned(
      ),
    )),
 ```
+
+
+## Drawing routes
+<img src="/screenshots/routing.jpg" width="600">
+
+### Activating Directions API
+1. Go to [Google Developers Console.](https://console.cloud.google.com/)
+2. Choose the project that you want to enable Google Maps on.
+3. Select the navigation menu and then select "Google Maps".
+4. Select "APIs" under the Google Maps menu.
+5. Enable Google Directions, select "Directions API" in the "Additional APIs" section, then select "ENABLE".
+6. Make sure the APIs you enabled are under the "Enabled APIs" section.
+
+### Adding route to the map
+1. Declare your start and end points
+```dart
+final LatLng initialLatLng = LatLng(30.029585, 31.022356);
+final LatLng destinationLatLng = LatLng(30.060567, 30.962413);
+```
+2. Declare polyline and polylineCoordinates
+```dart
+Set<Polyline> _polyline = {};
+List<LatLng> polylineCoordinates = [];
+```
+3. After creating the map, set the polyline
+```dart
+onMapCreated: (GoogleMapController controller) {
+          _controller.complete(controller);
+          _setMapPins([LatLng(30.029585, 31.022356)]);
+          _setMapStyle();
+          _addPolyLines();
+        },
+```
+```dart
+_addPolyLines() {
+    setState(() {
+      lat = (initialLatLng.latitude + destinationLatLng.latitude)/2;
+      lng= (initialLatLng.longitude + destinationLatLng.longitude)/2;
+      _moveCamera(13.0);
+      _setPolyLines();
+    });
+  }
+```
+4. To set polyline we send a get request to https://www.maps.googleapis.com/maps/api/directions/json with the start location, end location and the api key
+```dart
+final result = await MapRepository()
+        .getRouteCoordinates(initialLatLng, destinationLatLng);
+final route = result.data["routes"][0]["overview_polyline"]["points"];
+```
+5. Then we translate the results to a polyline using the MapUtils
+```dart
+_polyline.add(Polyline(
+    polylineId: PolylineId("tripRoute"),
+    //pass any string here
+    width: 3,
+    geodesic: true,
+    points: MapUtils.convertToLatLng(MapUtils.decodePoly(route)),
+    color: Theme.of(context).primaryColor));
+```
