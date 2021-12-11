@@ -1,7 +1,7 @@
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_flutter_example/Application.dart';
-import 'package:google_maps_flutter_example/Models/APIResultModel.dart';
-import 'package:google_maps_flutter_example/api/API.dart';
+import 'package:google_maps_flutter_example/application.dart';
+import 'package:google_maps_flutter_example/models/api_result_model.dart';
+import 'package:google_maps_flutter_example/api/api.dart';
 
 class MapRepository{
   Future<APIResultModel> getRouteCoordinates(LatLng l1, LatLng l2) {

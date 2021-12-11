@@ -1,21 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter_example/Widgets/GoogleMapsWidget.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter_example/Widgets/google_maps_widget.dart';
+import 'package:google_maps_flutter_example/app_bloc.dart';
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   // This widget is the root of your application.
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Google Maps Training',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return MultiBlocProvider(
+      providers: AppBloc.providers,
+      child: MaterialApp(
+        title: 'Google Maps Training',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: MainScreen(),
       ),
-      home: MainScreen(),
     );
+  }
+
+  @override
+  void dispose() {
+    AppBloc.dispose();
+    super.dispose();
   }
 }
 

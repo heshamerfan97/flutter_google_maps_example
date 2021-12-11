@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_flutter_example/Repositories/MapRepository.dart';
-import 'package:google_maps_flutter_example/Utils/MapUtils.dart';
+import 'package:google_maps_flutter_example/Repositories/map_repository.dart';
+import 'package:google_maps_flutter_example/Utils/map_utils.dart';
+import 'package:google_maps_flutter_example/app_bloc.dart';
+import 'package:google_maps_flutter_example/controller/live_location_cubit.dart';
+import 'package:location/location.dart';
 
 class GoogleMapsWidget extends StatefulWidget {
   @override
@@ -13,27 +17,25 @@ class GoogleMapsWidget extends StatefulWidget {
 
 class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
   Completer<GoogleMapController> _controller = Completer();
-  double lat =30.029585;
-  double lng =31.022356;
+  double lat = 30.029585;
+  double lng = 31.022356;
   final LatLng initialLatLng = LatLng(30.029585, 31.022356);
   final LatLng destinationLatLng = LatLng(30.060567, 30.962413);
 
   Set<Marker> _markers = Set<Marker>();
   late BitmapDescriptor customIcon;
 
-
   bool mapDarkMode = true;
   late String _darkMapStyle;
   late String _lightMapStyle;
-
 
   Set<Polyline> _polyline = {};
   List<LatLng> polylineCoordinates = [];
 
   @override
   void initState() {
-    BitmapDescriptor.fromAssetImage(ImageConfiguration(size: Size(50, 50)),
-            'assets/images/marker_car.png')
+    BitmapDescriptor.fromAssetImage(
+            ImageConfiguration(size: Size(50, 50)), 'assets/images/marker_car.png')
         .then((icon) {
       customIcon = icon;
     });
@@ -56,31 +58,37 @@ class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-      GoogleMap(
-        mapType: MapType.normal,
-        rotateGesturesEnabled: true,
-        zoomGesturesEnabled: true,
-        trafficEnabled: false,
-        tiltGesturesEnabled: false,
-        scrollGesturesEnabled: true,
-        compassEnabled: true,
-        myLocationButtonEnabled: true,
-        zoomControlsEnabled: false,
-        mapToolbarEnabled: false,
-        markers: _markers,
-        polylines: _polyline,
-        initialCameraPosition: CameraPosition(
-          target: initialLatLng,
-          zoom: 14.47,
-        ),
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-          _setMapPins([LatLng(30.029585, 31.022356)]);
-          _setMapStyle();
-          _addPolyLines();
+    return Stack(children: [
+      BlocListener<LiveLocationCubit, LocationData?>(
+        listener: (context, liveLocation) {
+          if (liveLocation != null) {
+            _updateUserMarker(liveLocation);
+          }
         },
+        child: GoogleMap(
+          mapType: MapType.normal,
+          rotateGesturesEnabled: true,
+          zoomGesturesEnabled: true,
+          trafficEnabled: false,
+          tiltGesturesEnabled: false,
+          scrollGesturesEnabled: true,
+          compassEnabled: true,
+          myLocationButtonEnabled: true,
+          zoomControlsEnabled: false,
+          mapToolbarEnabled: false,
+          markers: _markers,
+          polylines: _polyline,
+          initialCameraPosition: CameraPosition(
+            target: initialLatLng,
+            zoom: 14.47,
+          ),
+          onMapCreated: (GoogleMapController controller) {
+            _controller.complete(controller);
+            _setMapPins([LatLng(30.029585, 31.022356)]);
+            _setMapStyle();
+            _addPolyLines();
+          },
+        ),
       ),
       Positioned(
           top: 100,
@@ -101,11 +109,26 @@ class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
               },
             ),
           )),
-      ]
-    );
+      Positioned(
+          bottom: 50,
+          left: 30,
+          child: Container(
+            height: 30,
+            width: 30,
+            child: IconButton(
+              icon: Icon(
+                Icons.send,
+                color: Theme.of(context).primaryColor,
+              ),
+              onPressed: () {
+                AppBloc.liveLocationCubit.startService();
+              },
+            ),
+          )),
+    ]);
   }
 
-  _moveCamera(double? zoom) async {
+  _moveCamera([double? zoom]) async {
     final CameraPosition myPosition = CameraPosition(
       target: LatLng(lat, lng),
       zoom: zoom ?? 14.4746,
@@ -141,16 +164,15 @@ class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
 
   _addPolyLines() {
     setState(() {
-      lat = (initialLatLng.latitude + destinationLatLng.latitude)/2;
-      lng= (initialLatLng.longitude + destinationLatLng.longitude)/2;
+      lat = (initialLatLng.latitude + destinationLatLng.latitude) / 2;
+      lng = (initialLatLng.longitude + destinationLatLng.longitude) / 2;
       _moveCamera(13.0);
       _setPolyLine();
     });
   }
 
   _setPolyLine() async {
-    final result = await MapRepository()
-        .getRouteCoordinates(initialLatLng, destinationLatLng);
+    final result = await MapRepository().getRouteCoordinates(initialLatLng, destinationLatLng);
     final route = result.data["routes"][0]["overview_polyline"]["points"];
     setState(() {
       _polyline.add(Polyline(
@@ -161,5 +183,19 @@ class _GoogleMapsWidgetState extends State<GoogleMapsWidget> {
           points: MapUtils.convertToLatLng(MapUtils.decodePoly(route)),
           color: Theme.of(context).primaryColor));
     });
+  }
+
+  _updateUserMarker(LocationData currentLocation) {
+    if (currentLocation.latitude != null && currentLocation.longitude != null) {
+      _markers.removeWhere((marker) => marker.markerId.value == 'user');
+      lat = currentLocation.latitude!;
+      lng = currentLocation.longitude!;
+      _moveCamera();
+      setState(() {
+        _markers.add(Marker(
+            markerId: MarkerId('user'),
+            position: LatLng(currentLocation.latitude!, currentLocation.longitude!)));
+      });
+    }
   }
 }

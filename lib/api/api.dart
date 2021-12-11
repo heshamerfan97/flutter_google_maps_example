@@ -1,5 +1,5 @@
-import 'package:google_maps_flutter_example/Models/APIResultModel.dart';
-import 'package:google_maps_flutter_example/api/HttpManager.dart';
+import 'package:google_maps_flutter_example/models/api_result_model.dart';
+import 'package:google_maps_flutter_example/api/http_manager.dart';
 
 class API {
   ///Map APIs
@@ -14,9 +14,5 @@ class API {
         response: await HttpManager.get(baseUrl: GET_COORDINATES_URL, path: GET_COORDINATES_PATH, parameters: parameters),
         data: null);
   }
-
-
-
-
 
 }

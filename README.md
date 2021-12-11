@@ -239,3 +239,90 @@ _polyline.add(Polyline(
     points: MapUtils.convertToLatLng(MapUtils.decodePoly(route)),
     color: Theme.of(context).primaryColor));
 ```
+
+
+## Live Location
+
+
+### Preparing the app
+1. Add [location: ^4.3.0](https://pub.dev/packages/location) in pubspec.yaml file
+
+2. In `android/app/src/main/AndroidManifest.xml` add the following permissions
+```xml
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+```
+
+3. In `android/app/build.gradle` increase the minSdkVersion to 20
+
+4. In `ios/runner/info.plist` add the following lines
+```plist
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>we will use this to get user location</string>
+<key>NSLocationAlwaysUsageDescription</key>
+<string>we will use this to get user location</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>we will use this to get user location</string>
+```
+
+### Current location service
+In the services folder you can find [current_location_service.dart](/lib/services/current_location_service.dart) where we enable the service
+ ```dart
+ serviceEnabled = await  location.serviceEnabled();
+     if(!serviceEnabled){
+       serviceEnabled = await location.requestService();
+     }
+ ```
+ and listen to location changes 
+ ```dart
+  currentLocationStream =
+              location.onLocationChanged.listen((LocationData currentLocation) {
+                return AppBloc.liveLocationCubit.updateUserLocation(currentLocation);
+              });
+ ```
+ after getting the permission.
+ ```dart
+   PermissionStatus isGranted = await location.hasPermission();
+       if (isGranted == PermissionStatus.granted )
+         return true;
+       else {
+         PermissionStatus requestResult = await location.requestPermission();
+         if (requestResult == PermissionStatus.granted)
+           return true;
+         return false;
+       }
+ ```
+ 
+ 
+Note that for deployment, you need to tell the user (throw UI) that you will be collecting his location even when the app is in background.
+
+### Using the current location service
+ - Using any state management you prefer [(Here using BLoC/Cubit)](/lib/controller/live_location_cubit.dart) to control the service
+ - Every change in the service triggers the controller to update the UI
+ ```dart
+    AppBloc.liveLocationCubit.updateUserLocation(currentLocation);
+```
+ - In your UI [(Here google_maps_widget.dart)](/lib/widgets/google_maps_widget.dart) listen to the controller changes and update UI
+ ```dart
+   BlocListener<LiveLocationCubit, LocationData?>(
+           listener: (context, liveLocation) {
+             if (liveLocation != null) {
+               _updateUserMarker(liveLocation);
+             }
+           },
+``` 
+```dart
+   _updateUserMarker(LocationData currentLocation) {
+       if (currentLocation.latitude != null && currentLocation.longitude != null) {
+         _markers.removeWhere((marker) => marker.markerId.value == 'user');
+         lat = currentLocation.latitude!;
+         lng = currentLocation.longitude!;
+         _moveCamera();
+         setState(() {
+           _markers.add(Marker(
+               markerId: MarkerId('user'),
+               position: LatLng(currentLocation.latitude!, currentLocation.longitude!)));
+         });
+       }
+     }
+```

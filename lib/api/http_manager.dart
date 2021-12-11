@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:google_maps_flutter_example/Application.dart';
+import 'package:google_maps_flutter_example/application.dart';
 import 'package:http/http.dart' as http;
 
 class HttpManager {
