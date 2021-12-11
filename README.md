@@ -242,7 +242,7 @@ _polyline.add(Polyline(
 
 
 ## Live Location
-<img src="/screenshots/live_location.png" width="600">
+<img src="/screenshots/live_location.jpg" width="600">
 
 ### Preparing the app
 1. Add [location: ^4.3.0](https://pub.dev/packages/location) in pubspec.yaml file
