@@ -294,7 +294,7 @@ In the services folder you can find [current_location_service.dart](/lib/service
  ```
  
  
-Note that for deployment, you need to tell the user (throw UI) that you will be collecting his location even when the app is in background.
+Note that for deployment, you need to tell the user (through UI) that you will be collecting his location even when the app is in background.
 
 ### Using the current location service
  - Using any state management you prefer [(Here using BLoC/Cubit)](/lib/controller/live_location_cubit.dart) to control the service
