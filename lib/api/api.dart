@@ -1,5 +1,5 @@
 import 'package:google_maps_flutter_example/models/api_result_model.dart';
-import 'package:google_maps_flutter_example/api/http_manager.dart';
+import 'package:google_maps_flutter_example/api/dio_manager.dart';
 
 class API {
   ///Map APIs
@@ -11,7 +11,7 @@ class API {
   static Future<APIResultModel> getRouteCoordinates(dynamic parameters) async {
     print(parameters);
     return APIResultModel.fromResponse(
-        response: await HttpManager.get(baseUrl: GET_COORDINATES_URL, path: GET_COORDINATES_PATH, parameters: parameters),
+        response: await DioManager.get(path: GET_COORDINATES_PATH, parameters: parameters),
         data: null);
   }
 

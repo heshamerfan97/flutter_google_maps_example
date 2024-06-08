@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:http/http.dart';
+import 'package:dio/dio.dart';
 
 class APIResultModel {
   final bool success;
@@ -17,7 +17,7 @@ class APIResultModel {
   factory APIResultModel.fromResponse({Response? response, String? data}){
     if(response != null){
       try{
-        final responseBody = json.decode(response.body);
+        final responseBody = json.decode(response.data);
         return APIResultModel(
           success: response.statusCode == 200,
           message: responseBody['message']?? 'No message',
